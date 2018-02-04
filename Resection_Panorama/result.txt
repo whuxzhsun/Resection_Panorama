@@ -1,0 +1,12 @@
+****************  The first panorama  ****************
+The true parameter of panorama is:	505639.157555	3351812.089744	15.266000	0.008720	-0.000721	4.667066
+Add random error for each element:	 5.000000	-5.000000	1.000000	0.100000	0.100000	0.500000
+The parameter had been added error:	 505644.157555	3351807.089744	16.266000	0.108720	0.099279	5.167066
+The parameter had been corrected:	 505639.268232	3351811.962412	15.179920	0.002408	-0.009498	4.750317
+The difference of dst and src:		-0.110677	0.127332	0.086080	0.006312	0.008777	-0.083251
+****************  The second panorama  ****************
+The true parameter of panorama is:	505634.192153	3351811.845514	15.261000	0.009206	-0.000262	4.675238
+Add random error for each element:	 5.000000	-5.000000	1.000000	0.100000	0.100000	0.500000
+The parameter had been added error:	 505639.192153	3351806.845514	16.261000	0.109206	0.099738	5.175238
+The parameter had been corrected:	 505634.204347	3351811.848097	15.181759	-0.000507	-0.009480	4.747609
+The difference of dst and src:		-0.012194	-0.002583	0.079241	0.009713	0.009218	-0.072371
