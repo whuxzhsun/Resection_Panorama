@@ -6,24 +6,97 @@
 #include <iostream>
 #include <fstream>
 #include <string>
+#include <sstream>
 /*#include <iomanip>*/
 
 using namespace std;
 
-void biyesheji();
+void calib_L10();
 
 int _tmain(int argc, _TCHAR* argv[])
 {
-	biyesheji();
+	calib_L10();
 
 	return 0;
 }
 
-void biyesheji()
+void calib_L10()
 {
-	int k = 0;
+	vector<panoPara>	pps;
 
-	ifstream inCammer("D:\\Data\\20180203_BEIJING_L10\\image\\resection\\75.txt", ios::in);
+	/*
+		读取图像参数
+	*/
+	string camFile("G:\\20170204_L10\\20180204_BEIJING_L10_TEST_02\\image\\pixel\\imageList_no_offset.txt");
+	string pointsFile("G:\\20170204_L10\\20180204_BEIJING_L10_TEST_02\\image\\pixel\\pixel_points.txt");
+
+	ifstream readCam(camFile, ios::in);
+	if (!readCam.is_open())
+	{
+		cout << "failed to open file:" << camFile << endl;
+		return;
+	}
+
+	while (!readCam.eof())
+	{
+		char lineStr[512];
+		if (!readCam.getline(lineStr, 512))
+			break;
+
+		double x, y, z, al, ph, de;
+		string second, date, time;
+		double la, lo;
+
+		panoPara pp;
+		stringstream ss;
+		ss << lineStr << endl;
+		ss >> pp.imgName >> la >> lo >> x >> y >> z >> al >> ph >> de >> second >> date >> time;
+		pp.xs = x;		pp.ys = y;	pp.zs = z;
+		pp.alpha = al;	pp.phi = ph;	pp.belta = de;
+
+		pps.push_back(pp);
+	}
+
+	readCam.close();
+
+	/*
+		读取每幅图像对应的像点
+	*/
+	ifstream readPoints(pointsFile, ios::in);
+	if (!readPoints.is_open())
+	{
+		cout << "failed to open file:" << pointsFile << endl;
+		return;
+	}
+
+	while (!readPoints.eof())
+	{
+		char lineStr[512];
+		if (!readPoints.getline(lineStr, 512))
+			break;
+
+		pointData pd;
+		stringstream ss;
+		ss << lineStr << endl;
+		ss >> pd.imgName >> pd.px >> pd.py >> pd.x >> pd.y >> pd.z;
+
+		for (int i = 0; i < pps.size(); i++)
+		{
+			if (pd.imgName == pps[i].imgName)
+			{
+				pps[i].pixels.push_back(pd);
+			}
+		}
+	}
+
+	readPoints.close();
+
+	SPP_S spp;
+	spp.setImgSize(8192, 4096);
+	spp.solvePanoParameter(pps);
+
+
+/*	ifstream inCammer("D:\\Data\\20180203_BEIJING_L10\\image\\resection\\75.txt", ios::in);
 	char fileHeader[512];
 	inCammer.getline(fileHeader, 512);
 	ifstream inPoint("D:\\Data\\20180203_BEIJING_L10\\image\\resection\\ptpx.txt", ios::in);
