@@ -11,105 +11,50 @@
 
 using namespace std;
 
-void calib_L10();
+#define DEG_TO_RAD	.017453292519943296
+
+void resection_L10();
 
 int _tmain(int argc, _TCHAR* argv[])
 {
-	calib_L10();
+	resection_L10();
 
 	return 0;
 }
 
-void calib_L10()
+int getRotation(double inRoll, double inPitch, double inYaw, double outR[])
 {
-	vector<panoPara>	pps;
+	inRoll = -inRoll;
+	inPitch = -inPitch;
+	outR[0] = cos(inRoll)*cos(inYaw) + sin(inPitch)*sin(inRoll)*sin(inYaw);
+	outR[1] = cos(inPitch)*sin(inYaw);
+	outR[2] = -sin(inRoll)*cos(inYaw) + sin(inPitch)*cos(inRoll)*sin(inYaw);
+	outR[3] = -cos(inRoll)*sin(inYaw) + sin(inPitch)*sin(inRoll)*cos(inYaw);
+	outR[4] = cos(inPitch)*cos(inYaw);
+	outR[5] = sin(inRoll)*sin(inYaw) + sin(inPitch)*cos(inRoll)*cos(inYaw);
+	outR[6] = cos(inPitch)*sin(inRoll);
+	outR[7] = -sin(inPitch); // + or - ?
+	outR[8] = cos(inRoll)*cos(inPitch);
 
-	/*
-		读取图像参数
-	*/
-	string camFile("G:\\20170204_L10\\20180204_BEIJING_L10_TEST_02\\image\\pixel\\imageList_no_offset.txt");
-	string pointsFile("G:\\20170204_L10\\20180204_BEIJING_L10_TEST_02\\image\\pixel\\pixel_points.txt");
+	return 0;
+}
 
-	ifstream readCam(camFile, ios::in);
-	if (!readCam.is_open())
-	{
-		cout << "failed to open file:" << camFile << endl;
-		return;
-	}
-
-	while (!readCam.eof())
-	{
-		char lineStr[512];
-		if (!readCam.getline(lineStr, 512))
-			break;
-
-		double x, y, z, al, ph, de;
-		string second, date, time;
-		double la, lo;
-
-		panoPara pp;
-		stringstream ss;
-		ss << lineStr << endl;
-		ss >> pp.imgName >> la >> lo >> x >> y >> z >> al >> ph >> de >> second >> date >> time;
-		pp.xs = x;		pp.ys = y;	pp.zs = z;
-		pp.alpha = al;	pp.phi = ph;	pp.belta = de;
-
-		pps.push_back(pp);
-	}
-
-	readCam.close();
-
-	/*
-		读取每幅图像对应的像点
-	*/
-	ifstream readPoints(pointsFile, ios::in);
-	if (!readPoints.is_open())
-	{
-		cout << "failed to open file:" << pointsFile << endl;
-		return;
-	}
-
-	while (!readPoints.eof())
-	{
-		char lineStr[512];
-		if (!readPoints.getline(lineStr, 512))
-			break;
-
-		pointData pd;
-		stringstream ss;
-		ss << lineStr << endl;
-		ss >> pd.imgName >> pd.px >> pd.py >> pd.x >> pd.y >> pd.z;
-
-		for (int i = 0; i < pps.size(); i++)
-		{
-			if (pd.imgName == pps[i].imgName)
-			{
-				pps[i].pixels.push_back(pd);
-			}
-		}
-	}
-
-	readPoints.close();
-
-	SPP_S spp;
-	spp.setImgSize(8192, 4096);
-	spp.solvePanoParameter(pps);
-
-
-/*	ifstream inCammer("D:\\Data\\20180203_BEIJING_L10\\image\\resection\\75.txt", ios::in);
+void resection_L10()
+{
+	ifstream inCammer("D:\\Data\\20180226_Test_L10_fans\\309\\imagelist.txt", ios::in);
 	char fileHeader[512];
-	inCammer.getline(fileHeader, 512);
-	ifstream inPoint("D:\\Data\\20180203_BEIJING_L10\\image\\resection\\ptpx.txt", ios::in);
+//	inCammer.getline(fileHeader, 512);
+	ifstream inPoint("D:\\Data\\20180226_Test_L10_fans\\309\\309.txt", ios::in);
 
-	ofstream outCam("D:\\Data\\20180203_BEIJING_L10\\image\\resection\\Calibration.txt", ios::out);
+	ofstream outCam("D:\\Data\\20180226_Test_L10_fans\\309\\Calibration.txt", ios::out);
 	outCam << fileHeader << endl;
-	ofstream outContrast("D:\\Data\\20180203_BEIJING_L10\\image\\resection\\Contrast.txt", ios::out);
+	ofstream outContrast("D:\\Data\\20180226_Test_L10_fans\\309\\Contrast.txt", ios::out);
 	outContrast << "old_X\t" << "old_Y\t" << "old_Z\t" << "old_roll\t" << "old_pitch\t" << "old_heanding\t"
 		<< "new_X\t" << "new_Y\t" << "new_Z\t" << "new_roll\t" << "new_pitch\t" << "new_heanding\t" << endl;
 
-	ofstream outDiff("D:\\Data\\20180203_BEIJING_L10\\image\\resection\\Diff.txt", ios::out);
+	ofstream outDiff("D:\\Data\\20180226_Test_L10_fans\\309\\Diff.txt", ios::out);
 
-	ofstream outMeanError("D:\\Data\\20180203_BEIJING_L10\\image\\resection\\MeanError.txt", ios::out);
+	ofstream outMeanError("D:\\Data\\20180226_Test_L10_fans\\309\\MeanError.txt", ios::out);
 
 	outCam.setf(ios::fixed);
 	outCam.width(16);
@@ -124,15 +69,15 @@ void calib_L10()
 	outMeanError.setf(ios::fixed);
 	outMeanError.width(16);
 
-	for (k = 0; k < 1; k++)
+	for (int k = 0; k < 1; k++)
 	{
 		panoPara pp;
 		vector<pointData> pd;
 
 		int n, px, py;
 		double x, y, z, al, ph, de;
-		string imgName, second, date, time;
-		double la, lo;
+		string imgName, date, time;
+		double la, lo, second;
 
 		inCammer >> imgName >> la >> lo >> x >> y >> z >> al >> ph >> de >> second >> date >> time;
 		pp.xs = x;		pp.ys = y;	pp.zs = z;
@@ -140,7 +85,7 @@ void calib_L10()
 		panoPara oldPP = pp;
 
 		pointData pt;
-		for (int i = 0; i < 5; i++)
+		for (int i = 0; i < 4; i++)
 		{
 			inPoint >> n >> px >> py  >> x >> y >> z;
 			pt.px = px;	pt.py = py;
@@ -171,6 +116,18 @@ void calib_L10()
 			pp.alpha<< "\t" << pp.mean0[3] << "\n" <<
 			pp.phi	<< "\t" << pp.mean0[4] << "\n" <<
 			pp.belta<< "\t" << pp.mean0[5] << "\n\n" ;
+
+		double dd[3] = { 0.0864, -0.2961, 0.3015 };
+
+		double R[9];
+		getRotation(pp.alpha/* * DEG_TO_RAD*/, pp.phi/* * DEG_TO_RAD*/, pp.belta/* * DEG_TO_RAD*/, R);
+
+		double ax = R[0] * dd[0] + R[1] * dd[1] + R[2] * dd[2];
+		double ay = R[3] * dd[0] + R[4] * dd[1] + R[5] * dd[2];
+		double az = R[6] * dd[0] + R[7] * dd[1] + R[8] * dd[2];
+
+		outMeanError << 01 << " " << second + 24 * 3600 << "  " << pp.xs - ax << "  " << pp.ys - ay << "  " << pp.zs - az << "  "
+			<< "  0" << "  0" << "  0" << "  0" << "  0" << "  0\n";
 
 		cout.width(12);
 		cout.setf(ios::fixed);

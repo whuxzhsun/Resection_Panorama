@@ -50,18 +50,15 @@ public:
 
 public:
 	int setImgSize(int w, int h);
-	int solvePanoParameter(std::vector<panoPara> pps);
+	int solvePanoParameter(panoPara &pp, std::vector<pointData> pd);
 
 private:
 	int imgWidth;
 	int imgHeight;
 	double dpi;
 
-	double dx, dy, dz;
-	double itR, itP, itH;
-
 private:
-	int computeCoefficient(panoPara pp, pointData pt, double coe[][6]);
+	int computeCoefficient(panoPara pp, pointData point, double coe[][6]);
 
 };
 #endif
