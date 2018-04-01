@@ -59,7 +59,6 @@ private:
 
 private:
 	int computeCoefficient(panoPara pp, pointData point, double coe[][6]);
-	int computeCoefficient2(panoPara pp, pointData point, double coe[][6]);
 
 };
 #endif

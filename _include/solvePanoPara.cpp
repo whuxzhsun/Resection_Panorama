@@ -57,18 +57,6 @@ int SPP_S::solvePanoParameter(panoPara &pp, std::vector<pointData> pd)
 			double coe[4][6];
 			computeCoefficient(pp, pd[i], coe);
 
-			double coe2[4][6];
-			computeCoefficient2(pp, pd[i], coe2);
-
-			for (int ii = 0; ii < 2; ii++)
-			{
-				for (int jj = 0; jj < 6; jj++)
-				{
-					cout << coe[ii][jj] << "\t" << coe2[ii][jj] << "\t" << coe[ii][jj] - coe2[ii][jj] << endl;
-				}
-				cout << endl;
-			}
-
 			B(i * 2 + 0, 0) = coe[0][0];	B(i * 2 + 0, 1) = coe[0][1];	B(i * 2 + 0, 2) = coe[0][2];
 			B(i * 2 + 0, 3) = coe[0][3];	B(i * 2 + 0, 4) = coe[0][4];	B(i * 2 + 0, 5) = coe[0][5];
 			B(i * 2 + 1, 0) = coe[1][0];	B(i * 2 + 1, 1) = coe[1][1];	B(i * 2 + 1, 2) = coe[1][2];
@@ -194,106 +182,6 @@ int SPP_S::computeCoefficient(panoPara pp, pointData point, double coe[][6])
 	else
 	{
 		coe[2][0] = tanLon - theta + PI;
-	}
-
-	if (tanLat < 0)
-	{
-		coe[3][0] = tanLat + PI - psi;
-	}
-	else
-	{
-		coe[3][0] = tanLat - psi;
-	}
-
-	coe[2][0] = -coe[2][0];
-	coe[3][0] = -coe[3][0];
-
-	return 0;
-}
-
-int SPP_S::computeCoefficient2(panoPara pp, pointData point, double coe[][6])
-{
-	double ro, pt, he;
-	ro = pp.alpha;	
-	pt = pp.phi;	
-	he = pp.belta;
-
-	double theta, psi;
-	theta = point.px * dpi - PI;
-	psi = point.py * dpi;
-
-	double r1, r2, r3, r4, r5, r6, r7, r8, r9;
-	r1 = cos(he)*cos(ro) + sin(he)*sin(pt)*sin(ro);
-	r2 = cos(he)*sin(pt)*sin(ro) - cos(ro)*sin(he);
-	r3 =-cos(pt)*sin(ro);
-	r4 = cos(pt)*sin(he);
-	r5 = cos(he)*cos(pt);
-	r6 = sin(pt);
-	r7 = cos(he)*sin(ro) - cos(ro)*sin(he)*sin(pt);
-	r8 =-sin(he)*sin(ro) - cos(he)*cos(ro)*sin(pt); 
-	r9 = cos(pt)*cos(ro);
-
-	double bx, by, bz;
-	bx = point.x - pp.xs;
-	by = point.y - pp.ys;
-	bz = point.z - pp.zs;
-
-	double A, B, C;
-	A = r1*bx + r2*by + r3*bz;
-	B = r4*bx + r5*by + r6*bz;
-	C = r7*bx + r8*by + r9*bz;
-
-	double A2, B2, C2, A2B2, SQAB;
-	A2 = A * A;
-	B2 = B * B;
-	C2 = C * C;
-	A2B2 = A2 + B2;
-	SQAB = (A2B2 + C2) * sqrt(A2B2);
-
-	double tp1, tp2, tp3, tp4, tp5, tp6, tp7, tp8, tp9, tp10, tp11, tp12, tp13;
-	tp1 = sin(pt)*sin(ro);
-	tp2 = cos(he)*cos(pt)*sin(ro);
-	tp3 = cos(pt)*sin(he)*sin(ro);
-	tp4 = cos(he)*sin(pt);
-	tp5 = cos(pt);
-	tp6 = sin(he)*sin(pt);
-	tp7 = cos(ro)*sin(pt);
-	tp8 = cos(he)*cos(pt)*cos(ro);
-	tp9 = cos(pt)*cos(ro)*sin(he);
-	tp10 = C * (A * (tp1*bz + tp2*by + tp3*bx) - B * (tp4*by - tp5*bz + tp6*bx));
-	tp11 = A2B2 * (tp7*bz + tp8*by + tp9*bx);
-	tp12 = C * (A * (r2*bx - r1*by) + B * (r5*bx - r4*by));
-	tp13 = A2B2 * (-r8*bx + r7*by);
-
-	coe[0][0] = (A * r4 - B * r1) / A2B2;
-	coe[0][1] = (A * r5 - B * r2) / A2B2;
-	coe[0][2] = (A * r6 - B * r3) / A2B2;
-	coe[0][3] = -B * C / A2B2;
-	coe[0][4] = (A * (tp4 * by - tp5 * bz + tp6 * bx) + B * (tp1 * bz + tp2 * by + tp3 * bx)) / A2B2;
-	coe[0][5] = (A * (r4 * by - r5 * bx) + B * (r2 * bx - r1 * by)) / A2B2;
-
-	coe[1][0] = (A2B2 * r7 - C * (A * r1 + B * r4)) / SQAB;
-	coe[1][1] = (A2B2 * r8 - C * (A * r2 + B * r5)) / SQAB;
-	coe[1][2] = (A2B2 * r9 - C * (A * r3 + B * r6)) / SQAB;
-	coe[1][3] = -A / sqrt(A2B2);
-	coe[1][4] = (tp10 + tp11) / SQAB;
-	coe[1][5] = (tp12 + tp13) / SQAB;
-
-	double tanLon = 0, tanLat = 0;
-	tanLon = atan(A / B);
-	tanLat = atan(sqrt(A2B2) / C);
-
-	if (point.px < imgWidth / 4)
-	{
-		coe[2][0] = tanLon - PI - theta;
-	}
-	else if (point.px > imgWidth * 3 / 4)
-	{
-		coe[2][0] = tanLon + PI - theta;
-	}
-	else
-	{
-		coe[2][0] = tanLon - theta;
 	}
 
 	if (tanLat < 0)

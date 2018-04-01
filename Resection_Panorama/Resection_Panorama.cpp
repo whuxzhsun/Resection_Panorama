@@ -41,20 +41,21 @@ int getRotation(double inRoll, double inPitch, double inYaw, double outR[])
 
 void resection_L10()
 {
-	ifstream inCammer("D:\\Data\\20180226_Test_L10_fans\\309\\imagelist.txt", ios::in);
+	ifstream inCammer("pts\\img50.txt", ios::in);
 	char fileHeader[512];
 //	inCammer.getline(fileHeader, 512);
-	ifstream inPoint("D:\\Data\\20180226_Test_L10_fans\\309\\309.txt", ios::in);
+	ifstream inPoint("pts\\50.txt", ios::in);
+	int nPts = 4;
 
-	ofstream outCam("D:\\Data\\20180226_Test_L10_fans\\309\\Calibration.txt", ios::out);
+	ofstream outCam("pts\\Calibration.txt", ios::out);
 	outCam << fileHeader << endl;
-	ofstream outContrast("D:\\Data\\20180226_Test_L10_fans\\309\\Contrast.txt", ios::out);
+	ofstream outContrast("pts\\Contrast.txt", ios::out);
 	outContrast << "old_X\t" << "old_Y\t" << "old_Z\t" << "old_roll\t" << "old_pitch\t" << "old_heanding\t"
 		<< "new_X\t" << "new_Y\t" << "new_Z\t" << "new_roll\t" << "new_pitch\t" << "new_heanding\t" << endl;
 
-	ofstream outDiff("D:\\Data\\20180226_Test_L10_fans\\309\\Diff.txt", ios::out);
+	ofstream outDiff("pts\\Diff.txt", ios::out);
 
-	ofstream outMeanError("D:\\Data\\20180226_Test_L10_fans\\309\\MeanError.txt", ios::out);
+	ofstream outMeanError("pts\\MeanError.txt", ios::out);
 
 	outCam.setf(ios::fixed);
 	outCam.width(16);
@@ -85,7 +86,7 @@ void resection_L10()
 		panoPara oldPP = pp;
 
 		pointData pt;
-		for (int i = 0; i < 4; i++)
+		for (int i = 0; i < nPts; i++)
 		{
 			inPoint >> n >> px >> py  >> x >> y >> z;
 			pt.px = px;	pt.py = py;
