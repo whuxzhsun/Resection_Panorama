@@ -55,19 +55,8 @@ int SPP_S::solvePanoParameter(panoPara &pp, std::vector<pointData> pd)
 		for (i = 0; i < n; i++)
 		{
 			double coe[4][6];
-			computeCoefficient(pp, pd[i], coe);
-
-			double coe2[4][6];
-			computeCoefficient2(pp, pd[i], coe2);
-
-			for (int ii = 0; ii < 2; ii++)
-			{
-				for (int jj = 0; jj < 6; jj++)
-				{
-					cout << coe[ii][jj] << "\t" << coe2[ii][jj] << "\t" << coe[ii][jj] - coe2[ii][jj] << endl;
-				}
-				cout << endl;
-			}
+			//computeCoefficient(pp, pd[i], coe);
+			computeCoefficient2(pp, pd[i], coe);
 
 			B(i * 2 + 0, 0) = coe[0][0];	B(i * 2 + 0, 1) = coe[0][1];	B(i * 2 + 0, 2) = coe[0][2];
 			B(i * 2 + 0, 3) = coe[0][3];	B(i * 2 + 0, 4) = coe[0][4];	B(i * 2 + 0, 5) = coe[0][5];
@@ -83,36 +72,56 @@ int SPP_S::solvePanoParameter(panoPara &pp, std::vector<pointData> pd)
 		pp.xs += x(0, 0);
 		pp.ys += x(1, 0);
 		pp.zs += x(2, 0);
-		pp.alpha += x(3, 0);
-		pp.phi += x(4, 0);
-		pp.belta += x(5, 0);
+		pp.alpha	+= x(3, 0);
+		pp.phi		+= x(4, 0);
+		pp.belta	+= x(5, 0);
 
-
-		/**************************************************/
-		/* 输出中间结果                                   */
-		/**************************************************/
+		// 输出中间过程以供查看
+		outDebug.setf(ios::fixed);
 		for (j = 0; j < n * 2; j++)
 		{
 			for (int k = 0; k < 6; k++)
 			{
+				outDebug.width(6);
+				outDebug.precision(3);
 				outDebug << B(j, k) << "\t";
 			}
 			outDebug << endl;
 		}
 		for (j = 0; j < n * 2; j++)
 		{
+			outDebug.width(6);
+			outDebug.precision(3);
 			outDebug << L(j, 0) << endl;
-		}//*/
+		}
 
 		Matrix v = B * x - L;
 
 		for (j = 0; j < n; j++)
 		{
-			outDebug << v(j * 2 + 0, 0) << "\t" << v(j * 2 + 1, 0) << endl;
+			pd[j].px += v(j * 2 + 0, 0) / dpi;
+			pd[j].py += v(j * 2 + 1, 0) / dpi;
+// 			cout.setf(ios::fixed);
+// 			cout.width(6);
+// 			cout.precision(3);
+// 			cout << v(j * 2 + 0, 0) / dpi << "\t";
+// 			cout.width(6);
+// 			cout.precision(3);
+// 			cout << v(j * 2 + 1, 0) / dpi << endl;
+			
+			outDebug.width(6);
+			outDebug.precision(3);
+			outDebug << v(j * 2 + 0, 0) / dpi << "\t";
+			outDebug.width(6);
+			outDebug.precision(3);
+			outDebug << v(j * 2 + 1, 0) / dpi << endl;
 		}
+		cout << endl;
 
 		for (i = 0; i < 6; i++)
 		{
+			outDebug.width(6);
+			outDebug.precision(3);
 			outDebug << x(i, 0) << "\t";
 		}
 		outDebug << endl;
@@ -130,10 +139,8 @@ int SPP_S::solvePanoParameter(panoPara &pp, std::vector<pointData> pd)
 			pp.mean0[i] = meanM0 * sqrt(q(i, i));
 		}
 
-
 		threshould = (fabs(x(3, 0)) + fabs(x(4, 0)) + fabs(x(5, 0))) / 3;
-		k++;
-	} while (k < 15 && threshould > 0.00001);
+	} while (++k < 15 && threshould > 0.00001);
 	outDebug.close();
 
 	if (k > 100)

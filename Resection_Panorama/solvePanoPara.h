@@ -13,6 +13,8 @@ struct pointData
 		imgName = v.imgName;
 		px = v.px;	py = v.py;
 		x = v.x;	y = v.y;	z = v.z;
+
+		return *this;
 	}
 };
 

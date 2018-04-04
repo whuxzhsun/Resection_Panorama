@@ -1,1 +1,2 @@
 old_X	old_Y	old_Z	old_roll	old_pitch	old_heanding	new_X	new_Y	new_Z	new_roll	new_pitch	new_heanding	
+   458317.643000	4403414.560000	23.078000	0.003543	0.052569	3.177811	458317.674158	4403414.649470	23.315992	0.017356	0.055402	3.173473
