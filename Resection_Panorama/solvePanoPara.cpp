@@ -240,20 +240,30 @@ int SPP_S::computeCoefficient(panoPara pp, pointData point, double coe[][6])
 	coe[1][5] = (tp12 + tp13) / SQAB;
 
 	double tanLon = 0, tanLat = 0;
-	tanLon = atan(A / B);
+	tanLon = atan2(A, B);
 	tanLat = atan(sqrt(A2B2) / C);
 
-	if (point.px < imgWidth / 4)
+	coe[2][0] = tanLon - theta;
+// 	if (point.px < imgWidth / 4)
+// 	{
+// 		coe[2][0] = tanLon - PI - theta;
+// 	}
+// 	else if (point.px > imgWidth * 3 / 4)
+// 	{
+// 		coe[2][0] = tanLon + PI - theta;
+// 	}
+// 	else
+// 	{
+// 		coe[2][0] = tanLon - theta;
+// 	}
+
+	if (coe[2][0] < -PI / 2)
 	{
-		coe[2][0] = tanLon - PI - theta;
+		coe[2][0] += PI;
 	}
-	else if (point.px > imgWidth * 3 / 4)
+	else if (coe[2][0] > PI / 2)
 	{
-		coe[2][0] = tanLon + PI - theta;
-	}
-	else
-	{
-		coe[2][0] = tanLon - theta;
+		coe[2][0] -= PI;
 	}
 
 	if (tanLat < 0)
