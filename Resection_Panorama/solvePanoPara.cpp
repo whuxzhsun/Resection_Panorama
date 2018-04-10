@@ -55,8 +55,7 @@ int SPP_S::solvePanoParameter(panoPara &pp, std::vector<pointData> pd)
 		for (i = 0; i < n; i++)
 		{
 			double coe[4][6];
-			//computeCoefficient(pp, pd[i], coe);
-			computeCoefficient2(pp, pd[i], coe);
+			computeCoefficient(pp, pd[i], coe);
 
 			B(i * 2 + 0, 0) = coe[0][0];	B(i * 2 + 0, 1) = coe[0][1];	B(i * 2 + 0, 2) = coe[0][2];
 			B(i * 2 + 0, 3) = coe[0][3];	B(i * 2 + 0, 4) = coe[0][4];	B(i * 2 + 0, 5) = coe[0][5];
@@ -64,10 +63,27 @@ int SPP_S::solvePanoParameter(panoPara &pp, std::vector<pointData> pd)
 			B(i * 2 + 1, 3) = coe[1][3];	B(i * 2 + 1, 4) = coe[1][4];	B(i * 2 + 1, 5) = coe[1][5];
 			L(i * 2 + 0, 0) = coe[2][0];	L(i * 2 + 1, 0) = coe[3][0];
 		}
+
+		Matrix P(2 * n, n * 2);
+		for (i = 0; i < n * 2; i++)
+		{
+			for (j = 0; j < n * 2; j++)
+			{
+				if (i == j)
+				{
+					P(i, j) = sqrt(pow(pd[i / 2].x - pp.xs, 2) + pow(pd[i / 2].y - pp.ys, 2) + pow(pd[i /2].z - pp.zs, 2));
+				}
+				else
+				{
+					P(i, j) = 0;
+				}
+			}
+		}
+
 		Matrix Bt;
 		Bt = B;
 		Bt.getTranspose();
-		Matrix x = (Bt * B).getInverse() * Bt * L;
+		Matrix x = (Bt * P * B).getInverse() * Bt * P * L;
 
 		pp.xs += x(0, 0);
 		pp.ys += x(1, 0);
@@ -116,7 +132,7 @@ int SPP_S::solvePanoParameter(panoPara &pp, std::vector<pointData> pd)
 			outDebug.precision(3);
 			outDebug << v(j * 2 + 1, 0) / dpi << endl;
 		}
-		cout << endl;
+/*		cout << endl;*/
 
 		for (i = 0; i < 6; i++)
 		{
@@ -156,69 +172,6 @@ int SPP_S::solvePanoParameter(panoPara &pp, std::vector<pointData> pd)
 }
 
 int SPP_S::computeCoefficient(panoPara pp, pointData point, double coe[][6])
-{
-	double xs, ys, zs;
-	xs = pp.xs;	ys = pp.ys;	zs = pp.zs;
-	double ro, pt, he;
-	ro = pp.alpha;	pt = pp.phi;	he = pp.belta;
-	double theta, psi;
-	theta = point.px * dpi - PI;
-	psi = point.py * dpi;
-	double x, y, z;
-	x = point.x;	y = point.y;	z = point.z;
-
-	coe[0][0] = -((cos(he)*cos(ro) + sin(he)*sin(pt)*sin(ro)) / (sin(pt)*(z - zs) + cos(he)*cos(pt)*(y - ys) + cos(pt)*sin(he)*(x - xs)) + cos(pt)*sin(he)*(-(cos(he)*cos(ro) + sin(he)*sin(pt)*sin(ro))*(x - xs) + (cos(ro)*sin(he) - cos(he)*sin(pt)*sin(ro))*(y - ys) + cos(pt)*sin(ro)*(z - zs))*1.0 / pow(sin(pt)*(z - zs) + cos(he)*cos(pt)*(y - ys) + cos(pt)*sin(he)*(x - xs), 2.0)) / (pow(-(cos(he)*cos(ro) + sin(he)*sin(pt)*sin(ro))*(x - xs) + (cos(ro)*sin(he) - cos(he)*sin(pt)*sin(ro))*(y - ys) + cos(pt)*sin(ro)*(z - zs), 2.0)*1.0 / pow(sin(pt)*(z - zs) + cos(he)*cos(pt)*(y - ys) + cos(pt)*sin(he)*(x - xs), 2.0) + 1.0);
-	coe[0][1] = ((cos(ro)*sin(he) - cos(he)*sin(pt)*sin(ro)) / (sin(pt)*(z - zs) + cos(he)*cos(pt)*(y - ys) + cos(pt)*sin(he)*(x - xs)) - cos(he)*cos(pt)*(-(cos(he)*cos(ro) + sin(he)*sin(pt)*sin(ro))*(x - xs) + (cos(ro)*sin(he) - cos(he)*sin(pt)*sin(ro))*(y - ys) + cos(pt)*sin(ro)*(z - zs))*1.0 / pow(sin(pt)*(z - zs) + cos(he)*cos(pt)*(y - ys) + cos(pt)*sin(he)*(x - xs), 2.0)) / (pow(-(cos(he)*cos(ro) + sin(he)*sin(pt)*sin(ro))*(x - xs) + (cos(ro)*sin(he) - cos(he)*sin(pt)*sin(ro))*(y - ys) + cos(pt)*sin(ro)*(z - zs), 2.0)*1.0 / pow(sin(pt)*(z - zs) + cos(he)*cos(pt)*(y - ys) + cos(pt)*sin(he)*(x - xs), 2.0) + 1.0);
-	coe[0][2] = ((cos(pt)*sin(ro)) / (sin(pt)*(z - zs) + cos(he)*cos(pt)*(y - ys) + cos(pt)*sin(he)*(x - xs)) - sin(pt)*(-(cos(he)*cos(ro) + sin(he)*sin(pt)*sin(ro))*(x - xs) + (cos(ro)*sin(he) - cos(he)*sin(pt)*sin(ro))*(y - ys) + cos(pt)*sin(ro)*(z - zs))*1.0 / pow(sin(pt)*(z - zs) + cos(he)*cos(pt)*(y - ys) + cos(pt)*sin(he)*(x - xs), 2.0)) / (pow(-(cos(he)*cos(ro) + sin(he)*sin(pt)*sin(ro))*(x - xs) + (cos(ro)*sin(he) - cos(he)*sin(pt)*sin(ro))*(y - ys) + cos(pt)*sin(ro)*(z - zs), 2.0)*1.0 / pow(sin(pt)*(z - zs) + cos(he)*cos(pt)*(y - ys) + cos(pt)*sin(he)*(x - xs), 2.0) + 1.0);
-	coe[0][3] = -((cos(he)*sin(ro) - cos(ro)*sin(he)*sin(pt))*(x - xs) - (sin(he)*sin(ro) + cos(he)*cos(ro)*sin(pt))*(y - ys) + cos(pt)*cos(ro)*(z - zs)) / ((pow(-(cos(he)*cos(ro) + sin(he)*sin(pt)*sin(ro))*(x - xs) + (cos(ro)*sin(he) - cos(he)*sin(pt)*sin(ro))*(y - ys) + cos(pt)*sin(ro)*(z - zs), 2.0)*1.0 / pow(sin(pt)*(z - zs) + cos(he)*cos(pt)*(y - ys) + cos(pt)*sin(he)*(x - xs), 2.0) + 1.0)*(sin(pt)*(z - zs) + cos(he)*cos(pt)*(y - ys) + cos(pt)*sin(he)*(x - xs)));
-	coe[0][4] = ((sin(pt)*sin(ro)*(z - zs) + cos(he)*cos(pt)*sin(ro)*(y - ys) + cos(pt)*sin(he)*sin(ro)*(x - xs)) / (sin(pt)*(z - zs) + cos(he)*cos(pt)*(y - ys) + cos(pt)*sin(he)*(x - xs)) - (-(cos(he)*cos(ro) + sin(he)*sin(pt)*sin(ro))*(x - xs) + (cos(ro)*sin(he) - cos(he)*sin(pt)*sin(ro))*(y - ys) + cos(pt)*sin(ro)*(z - zs))*1.0 / pow(sin(pt)*(z - zs) + cos(he)*cos(pt)*(y - ys) + cos(pt)*sin(he)*(x - xs), 2.0)*(-cos(pt)*(z - zs) + cos(he)*sin(pt)*(y - ys) + sin(he)*sin(pt)*(x - xs))) / (pow(-(cos(he)*cos(ro) + sin(he)*sin(pt)*sin(ro))*(x - xs) + (cos(ro)*sin(he) - cos(he)*sin(pt)*sin(ro))*(y - ys) + cos(pt)*sin(ro)*(z - zs), 2.0)*1.0 / pow(sin(pt)*(z - zs) + cos(he)*cos(pt)*(y - ys) + cos(pt)*sin(he)*(x - xs), 2.0) + 1.0);
-	coe[0][5] = -(((cos(ro)*sin(he) - cos(he)*sin(pt)*sin(ro))*(x - xs) + (cos(he)*cos(ro) + sin(he)*sin(pt)*sin(ro))*(y - ys)) / (sin(pt)*(z - zs) + cos(he)*cos(pt)*(y - ys) + cos(pt)*sin(he)*(x - xs)) - (cos(he)*cos(pt)*(x - xs) - cos(pt)*sin(he)*(y - ys))*(-(cos(he)*cos(ro) + sin(he)*sin(pt)*sin(ro))*(x - xs) + (cos(ro)*sin(he) - cos(he)*sin(pt)*sin(ro))*(y - ys) + cos(pt)*sin(ro)*(z - zs))*1.0 / pow(sin(pt)*(z - zs) + cos(he)*cos(pt)*(y - ys) + cos(pt)*sin(he)*(x - xs), 2.0)) / (pow(-(cos(he)*cos(ro) + sin(he)*sin(pt)*sin(ro))*(x - xs) + (cos(ro)*sin(he) - cos(he)*sin(pt)*sin(ro))*(y - ys) + cos(pt)*sin(ro)*(z - zs), 2.0)*1.0 / pow(sin(pt)*(z - zs) + cos(he)*cos(pt)*(y - ys) + cos(pt)*sin(he)*(x - xs), 2.0) + 1.0);
-
-	coe[1][0] = ((((cos(he)*cos(ro) + sin(he)*sin(pt)*sin(ro))*(-(cos(he)*cos(ro) + sin(he)*sin(pt)*sin(ro))*(x - xs) + (cos(ro)*sin(he) - cos(he)*sin(pt)*sin(ro))*(y - ys) + cos(pt)*sin(ro)*(z - zs))*2.0 - cos(pt)*sin(he)*(sin(pt)*(z - zs) + cos(he)*cos(pt)*(y - ys) + cos(pt)*sin(he)*(x - xs))*2.0)*1.0 / sqrt(pow(sin(pt)*(z - zs) + cos(he)*cos(pt)*(y - ys) + cos(pt)*sin(he)*(x - xs), 2.0) + pow(-(cos(he)*cos(ro) + sin(he)*sin(pt)*sin(ro))*(x - xs) + (cos(ro)*sin(he) - cos(he)*sin(pt)*sin(ro))*(y - ys) + cos(pt)*sin(ro)*(z - zs), 2.0))*(1.0 / 2.0)) / ((cos(he)*sin(ro) - cos(ro)*sin(he)*sin(pt))*(x - xs) - (sin(he)*sin(ro) + cos(he)*cos(ro)*sin(pt))*(y - ys) + cos(pt)*cos(ro)*(z - zs)) + (cos(he)*sin(ro) - cos(ro)*sin(he)*sin(pt))*sqrt(pow(sin(pt)*(z - zs) + cos(he)*cos(pt)*(y - ys) + cos(pt)*sin(he)*(x - xs), 2.0) + pow(-(cos(he)*cos(ro) + sin(he)*sin(pt)*sin(ro))*(x - xs) + (cos(ro)*sin(he) - cos(he)*sin(pt)*sin(ro))*(y - ys) + cos(pt)*sin(ro)*(z - zs), 2.0))*1.0 / pow((cos(he)*sin(ro) - cos(ro)*sin(he)*sin(pt))*(x - xs) - (sin(he)*sin(ro) + cos(he)*cos(ro)*sin(pt))*(y - ys) + cos(pt)*cos(ro)*(z - zs), 2.0)) / ((pow(sin(pt)*(z - zs) + cos(he)*cos(pt)*(y - ys) + cos(pt)*sin(he)*(x - xs), 2.0) + pow(-(cos(he)*cos(ro) + sin(he)*sin(pt)*sin(ro))*(x - xs) + (cos(ro)*sin(he) - cos(he)*sin(pt)*sin(ro))*(y - ys) + cos(pt)*sin(ro)*(z - zs), 2.0))*1.0 / pow((cos(he)*sin(ro) - cos(ro)*sin(he)*sin(pt))*(x - xs) - (sin(he)*sin(ro) + cos(he)*cos(ro)*sin(pt))*(y - ys) + cos(pt)*cos(ro)*(z - zs), 2.0) + 1.0);
-	coe[1][1] = -((1.0 / sqrt(pow(sin(pt)*(z - zs) + cos(he)*cos(pt)*(y - ys) + cos(pt)*sin(he)*(x - xs), 2.0) + pow(-(cos(he)*cos(ro) + sin(he)*sin(pt)*sin(ro))*(x - xs) + (cos(ro)*sin(he) - cos(he)*sin(pt)*sin(ro))*(y - ys) + cos(pt)*sin(ro)*(z - zs), 2.0))*((cos(ro)*sin(he) - cos(he)*sin(pt)*sin(ro))*(-(cos(he)*cos(ro) + sin(he)*sin(pt)*sin(ro))*(x - xs) + (cos(ro)*sin(he) - cos(he)*sin(pt)*sin(ro))*(y - ys) + cos(pt)*sin(ro)*(z - zs))*2.0 + cos(he)*cos(pt)*(sin(pt)*(z - zs) + cos(he)*cos(pt)*(y - ys) + cos(pt)*sin(he)*(x - xs))*2.0)*(1.0 / 2.0)) / ((cos(he)*sin(ro) - cos(ro)*sin(he)*sin(pt))*(x - xs) - (sin(he)*sin(ro) + cos(he)*cos(ro)*sin(pt))*(y - ys) + cos(pt)*cos(ro)*(z - zs)) + (sin(he)*sin(ro) + cos(he)*cos(ro)*sin(pt))*sqrt(pow(sin(pt)*(z - zs) + cos(he)*cos(pt)*(y - ys) + cos(pt)*sin(he)*(x - xs), 2.0) + pow(-(cos(he)*cos(ro) + sin(he)*sin(pt)*sin(ro))*(x - xs) + (cos(ro)*sin(he) - cos(he)*sin(pt)*sin(ro))*(y - ys) + cos(pt)*sin(ro)*(z - zs), 2.0))*1.0 / pow((cos(he)*sin(ro) - cos(ro)*sin(he)*sin(pt))*(x - xs) - (sin(he)*sin(ro) + cos(he)*cos(ro)*sin(pt))*(y - ys) + cos(pt)*cos(ro)*(z - zs), 2.0)) / ((pow(sin(pt)*(z - zs) + cos(he)*cos(pt)*(y - ys) + cos(pt)*sin(he)*(x - xs), 2.0) + pow(-(cos(he)*cos(ro) + sin(he)*sin(pt)*sin(ro))*(x - xs) + (cos(ro)*sin(he) - cos(he)*sin(pt)*sin(ro))*(y - ys) + cos(pt)*sin(ro)*(z - zs), 2.0))*1.0 / pow((cos(he)*sin(ro) - cos(ro)*sin(he)*sin(pt))*(x - xs) - (sin(he)*sin(ro) + cos(he)*cos(ro)*sin(pt))*(y - ys) + cos(pt)*cos(ro)*(z - zs), 2.0) + 1.0);
-	coe[1][2] = -(((sin(pt)*(sin(pt)*(z - zs) + cos(he)*cos(pt)*(y - ys) + cos(pt)*sin(he)*(x - xs))*2.0 + cos(pt)*sin(ro)*(-(cos(he)*cos(ro) + sin(he)*sin(pt)*sin(ro))*(x - xs) + (cos(ro)*sin(he) - cos(he)*sin(pt)*sin(ro))*(y - ys) + cos(pt)*sin(ro)*(z - zs))*2.0)*1.0 / sqrt(pow(sin(pt)*(z - zs) + cos(he)*cos(pt)*(y - ys) + cos(pt)*sin(he)*(x - xs), 2.0) + pow(-(cos(he)*cos(ro) + sin(he)*sin(pt)*sin(ro))*(x - xs) + (cos(ro)*sin(he) - cos(he)*sin(pt)*sin(ro))*(y - ys) + cos(pt)*sin(ro)*(z - zs), 2.0))*(1.0 / 2.0)) / ((cos(he)*sin(ro) - cos(ro)*sin(he)*sin(pt))*(x - xs) - (sin(he)*sin(ro) + cos(he)*cos(ro)*sin(pt))*(y - ys) + cos(pt)*cos(ro)*(z - zs)) - cos(pt)*cos(ro)*sqrt(pow(sin(pt)*(z - zs) + cos(he)*cos(pt)*(y - ys) + cos(pt)*sin(he)*(x - xs), 2.0) + pow(-(cos(he)*cos(ro) + sin(he)*sin(pt)*sin(ro))*(x - xs) + (cos(ro)*sin(he) - cos(he)*sin(pt)*sin(ro))*(y - ys) + cos(pt)*sin(ro)*(z - zs), 2.0))*1.0 / pow((cos(he)*sin(ro) - cos(ro)*sin(he)*sin(pt))*(x - xs) - (sin(he)*sin(ro) + cos(he)*cos(ro)*sin(pt))*(y - ys) + cos(pt)*cos(ro)*(z - zs), 2.0)) / ((pow(sin(pt)*(z - zs) + cos(he)*cos(pt)*(y - ys) + cos(pt)*sin(he)*(x - xs), 2.0) + pow(-(cos(he)*cos(ro) + sin(he)*sin(pt)*sin(ro))*(x - xs) + (cos(ro)*sin(he) - cos(he)*sin(pt)*sin(ro))*(y - ys) + cos(pt)*sin(ro)*(z - zs), 2.0))*1.0 / pow((cos(he)*sin(ro) - cos(ro)*sin(he)*sin(pt))*(x - xs) - (sin(he)*sin(ro) + cos(he)*cos(ro)*sin(pt))*(y - ys) + cos(pt)*cos(ro)*(z - zs), 2.0) + 1.0);
-	coe[1][3] = (1.0 / sqrt(pow(sin(pt)*(z - zs) + cos(he)*cos(pt)*(y - ys) + cos(pt)*sin(he)*(x - xs), 2.0) + pow(-(cos(he)*cos(ro) + sin(he)*sin(pt)*sin(ro))*(x - xs) + (cos(ro)*sin(he) - cos(he)*sin(pt)*sin(ro))*(y - ys) + cos(pt)*sin(ro)*(z - zs), 2.0))*(-(cos(he)*cos(ro) + sin(he)*sin(pt)*sin(ro))*(x - xs) + (cos(ro)*sin(he) - cos(he)*sin(pt)*sin(ro))*(y - ys) + cos(pt)*sin(ro)*(z - zs)) + sqrt(pow(sin(pt)*(z - zs) + cos(he)*cos(pt)*(y - ys) + cos(pt)*sin(he)*(x - xs), 2.0) + pow(-(cos(he)*cos(ro) + sin(he)*sin(pt)*sin(ro))*(x - xs) + (cos(ro)*sin(he) - cos(he)*sin(pt)*sin(ro))*(y - ys) + cos(pt)*sin(ro)*(z - zs), 2.0))*1.0 / pow((cos(he)*sin(ro) - cos(ro)*sin(he)*sin(pt))*(x - xs) - (sin(he)*sin(ro) + cos(he)*cos(ro)*sin(pt))*(y - ys) + cos(pt)*cos(ro)*(z - zs), 2.0)*(-(cos(he)*cos(ro) + sin(he)*sin(pt)*sin(ro))*(x - xs) + (cos(ro)*sin(he) - cos(he)*sin(pt)*sin(ro))*(y - ys) + cos(pt)*sin(ro)*(z - zs))) / ((pow(sin(pt)*(z - zs) + cos(he)*cos(pt)*(y - ys) + cos(pt)*sin(he)*(x - xs), 2.0) + pow(-(cos(he)*cos(ro) + sin(he)*sin(pt)*sin(ro))*(x - xs) + (cos(ro)*sin(he) - cos(he)*sin(pt)*sin(ro))*(y - ys) + cos(pt)*sin(ro)*(z - zs), 2.0))*1.0 / pow((cos(he)*sin(ro) - cos(ro)*sin(he)*sin(pt))*(x - xs) - (sin(he)*sin(ro) + cos(he)*cos(ro)*sin(pt))*(y - ys) + cos(pt)*cos(ro)*(z - zs), 2.0) + 1.0);
-	coe[1][4] = -((((-(cos(he)*cos(ro) + sin(he)*sin(pt)*sin(ro))*(x - xs) + (cos(ro)*sin(he) - cos(he)*sin(pt)*sin(ro))*(y - ys) + cos(pt)*sin(ro)*(z - zs))*(sin(pt)*sin(ro)*(z - zs) + cos(he)*cos(pt)*sin(ro)*(y - ys) + cos(pt)*sin(he)*sin(ro)*(x - xs))*2.0 + (sin(pt)*(z - zs) + cos(he)*cos(pt)*(y - ys) + cos(pt)*sin(he)*(x - xs))*(-cos(pt)*(z - zs) + cos(he)*sin(pt)*(y - ys) + sin(he)*sin(pt)*(x - xs))*2.0)*1.0 / sqrt(pow(sin(pt)*(z - zs) + cos(he)*cos(pt)*(y - ys) + cos(pt)*sin(he)*(x - xs), 2.0) + pow(-(cos(he)*cos(ro) + sin(he)*sin(pt)*sin(ro))*(x - xs) + (cos(ro)*sin(he) - cos(he)*sin(pt)*sin(ro))*(y - ys) + cos(pt)*sin(ro)*(z - zs), 2.0))*(1.0 / 2.0)) / ((cos(he)*sin(ro) - cos(ro)*sin(he)*sin(pt))*(x - xs) - (sin(he)*sin(ro) + cos(he)*cos(ro)*sin(pt))*(y - ys) + cos(pt)*cos(ro)*(z - zs)) - sqrt(pow(sin(pt)*(z - zs) + cos(he)*cos(pt)*(y - ys) + cos(pt)*sin(he)*(x - xs), 2.0) + pow(-(cos(he)*cos(ro) + sin(he)*sin(pt)*sin(ro))*(x - xs) + (cos(ro)*sin(he) - cos(he)*sin(pt)*sin(ro))*(y - ys) + cos(pt)*sin(ro)*(z - zs), 2.0))*1.0 / pow((cos(he)*sin(ro) - cos(ro)*sin(he)*sin(pt))*(x - xs) - (sin(he)*sin(ro) + cos(he)*cos(ro)*sin(pt))*(y - ys) + cos(pt)*cos(ro)*(z - zs), 2.0)*(cos(ro)*sin(pt)*(z - zs) + cos(he)*cos(pt)*cos(ro)*(y - ys) + cos(pt)*cos(ro)*sin(he)*(x - xs))) / ((pow(sin(pt)*(z - zs) + cos(he)*cos(pt)*(y - ys) + cos(pt)*sin(he)*(x - xs), 2.0) + pow(-(cos(he)*cos(ro) + sin(he)*sin(pt)*sin(ro))*(x - xs) + (cos(ro)*sin(he) - cos(he)*sin(pt)*sin(ro))*(y - ys) + cos(pt)*sin(ro)*(z - zs), 2.0))*1.0 / pow((cos(he)*sin(ro) - cos(ro)*sin(he)*sin(pt))*(x - xs) - (sin(he)*sin(ro) + cos(he)*cos(ro)*sin(pt))*(y - ys) + cos(pt)*cos(ro)*(z - zs), 2.0) + 1.0);
-	coe[1][5] = (((((cos(ro)*sin(he) - cos(he)*sin(pt)*sin(ro))*(x - xs) + (cos(he)*cos(ro) + sin(he)*sin(pt)*sin(ro))*(y - ys))*(-(cos(he)*cos(ro) + sin(he)*sin(pt)*sin(ro))*(x - xs) + (cos(ro)*sin(he) - cos(he)*sin(pt)*sin(ro))*(y - ys) + cos(pt)*sin(ro)*(z - zs))*2.0 + (cos(he)*cos(pt)*(x - xs) - cos(pt)*sin(he)*(y - ys))*(sin(pt)*(z - zs) + cos(he)*cos(pt)*(y - ys) + cos(pt)*sin(he)*(x - xs))*2.0)*1.0 / sqrt(pow(sin(pt)*(z - zs) + cos(he)*cos(pt)*(y - ys) + cos(pt)*sin(he)*(x - xs), 2.0) + pow(-(cos(he)*cos(ro) + sin(he)*sin(pt)*sin(ro))*(x - xs) + (cos(ro)*sin(he) - cos(he)*sin(pt)*sin(ro))*(y - ys) + cos(pt)*sin(ro)*(z - zs), 2.0))*(1.0 / 2.0)) / ((cos(he)*sin(ro) - cos(ro)*sin(he)*sin(pt))*(x - xs) - (sin(he)*sin(ro) + cos(he)*cos(ro)*sin(pt))*(y - ys) + cos(pt)*cos(ro)*(z - zs)) + ((sin(he)*sin(ro) + cos(he)*cos(ro)*sin(pt))*(x - xs) + (cos(he)*sin(ro) - cos(ro)*sin(he)*sin(pt))*(y - ys))*sqrt(pow(sin(pt)*(z - zs) + cos(he)*cos(pt)*(y - ys) + cos(pt)*sin(he)*(x - xs), 2.0) + pow(-(cos(he)*cos(ro) + sin(he)*sin(pt)*sin(ro))*(x - xs) + (cos(ro)*sin(he) - cos(he)*sin(pt)*sin(ro))*(y - ys) + cos(pt)*sin(ro)*(z - zs), 2.0))*1.0 / pow((cos(he)*sin(ro) - cos(ro)*sin(he)*sin(pt))*(x - xs) - (sin(he)*sin(ro) + cos(he)*cos(ro)*sin(pt))*(y - ys) + cos(pt)*cos(ro)*(z - zs), 2.0)) / ((pow(sin(pt)*(z - zs) + cos(he)*cos(pt)*(y - ys) + cos(pt)*sin(he)*(x - xs), 2.0) + pow(-(cos(he)*cos(ro) + sin(he)*sin(pt)*sin(ro))*(x - xs) + (cos(ro)*sin(he) - cos(he)*sin(pt)*sin(ro))*(y - ys) + cos(pt)*sin(ro)*(z - zs), 2.0))*1.0 / pow((cos(he)*sin(ro) - cos(ro)*sin(he)*sin(pt))*(x - xs) - (sin(he)*sin(ro) + cos(he)*cos(ro)*sin(pt))*(y - ys) + cos(pt)*cos(ro)*(z - zs), 2.0) + 1.0);
-
-	double tanLon = -atan((-(cos(he)*cos(ro) + sin(he)*sin(pt)*sin(ro))*(x - xs) + (cos(ro)*sin(he) - cos(he)*sin(pt)*sin(ro))*(y - ys) + cos(pt)*sin(ro)*(z - zs)) / (sin(pt)*(z - zs) + cos(he)*cos(pt)*(y - ys) + cos(pt)*sin(he)*(x - xs)));
-	double tanLat = +atan(sqrt(pow(sin(pt)*(z - zs) + cos(he)*cos(pt)*(y - ys) + cos(pt)*sin(he)*(x - xs), 2.0) + pow(-(cos(he)*cos(ro) + sin(he)*sin(pt)*sin(ro))*(x - xs) + (cos(ro)*sin(he) - cos(he)*sin(pt)*sin(ro))*(y - ys) + cos(pt)*sin(ro)*(z - zs), 2.0)) / ((cos(he)*sin(ro) - cos(ro)*sin(he)*sin(pt))*(x - xs) - (sin(he)*sin(ro) + cos(he)*cos(ro)*sin(pt))*(y - ys) + cos(pt)*cos(ro)*(z - zs)));
-
-	coe[2][0] = tanLon - theta;
-
-	if (point.px < imgWidth / 4)
-	{
-		coe[2][0] = tanLon - theta - PI;
-	}
-	else if (point.px < imgWidth / 2)
-	{
-		coe[2][0] = tanLon - theta;
-	}
-	else if (point.px < imgWidth * 3 / 4)
-	{
-		coe[2][0] = tanLon - theta;
-	}
-	else
-	{
-		coe[2][0] = tanLon - theta + PI;
-	}
-
-	if (tanLat < 0)
-	{
-		coe[3][0] = tanLat + PI - psi;
-	}
-	else
-	{
-		coe[3][0] = tanLat - psi;
-	}
-
-	coe[2][0] = -coe[2][0];
-	coe[3][0] = -coe[3][0];
-
-	return 0;
-}
-
-int SPP_S::computeCoefficient2(panoPara pp, pointData point, double coe[][6])
 {
 	double ro, pt, he;
 	ro = pp.alpha;	
