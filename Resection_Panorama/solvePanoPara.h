@@ -54,10 +54,16 @@ public:
 	int setImgSize(int w, int h);
 	int solvePanoParameter(panoPara &pp, std::vector<pointData> pd);
 
+	// 解算位置、姿态
+	int solvePanoParameter_ceres(panoPara &pp, std::vector<pointData> pd);
+	// 只解算位置
+	int solvePanoParameter_ceres2(panoPara &pp, std::vector<pointData> pd);
+	// 只解算姿态
+	int solvePanoParameter_ceres3(panoPara &pp, std::vector<pointData> pd);
+
 private:
 	int imgWidth;
 	int imgHeight;
-	double dpi;
 
 private:
 	int computeCoefficient(panoPara pp, pointData point, double coe[][6]);
